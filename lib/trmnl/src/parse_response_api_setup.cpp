@@ -14,10 +14,11 @@ ApiSetupResponse parseResponse_apiSetup(String &payload)
   }
 
   ApiSetupResponse response;
-  response.status = doc["status"].as<int>();
+  response.status = doc["status"] | 200;  // Default to 200 if not present (Terminus BYOS compatibility)
   response.message = doc["message"] | "";
 
-  if (response.status != 200)
+  // Only fail if status explicitly set and not 200
+  if (doc.containsKey("status") && response.status != 200)
   {
     Log_info("status FAIL.");
     response.outcome = ApiSetupOutcome::StatusError;
