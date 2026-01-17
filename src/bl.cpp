@@ -244,13 +244,19 @@ void bl_init(void)
   // Mount SPIFFS
   filesystem_init();
 
-  // Only show logo and clear filename on power-on, reset, or button press - NOT on timer wakeup
-  if (wakeup_reason == ESP_SLEEP_WAKEUP_UNDEFINED ||
-      wakeup_reason == ESP_SLEEP_WAKEUP_GPIO ||
-      wakeup_reason == ESP_SLEEP_WAKEUP_EXT0 ||
-      wakeup_reason == ESP_SLEEP_WAKEUP_EXT1)
+  // Check if there's a saved filename - if so, this is likely a timer wakeup
+  String savedFilename = preferences.getString(PREFERENCES_FILENAME_KEY, "");
+
+  // Only show logo and clear filename if no filename is saved (first boot/reset)
+  // OR if it's a GPIO wakeup (button press)
+  bool isGpioWakeup = (wakeup_reason == ESP_SLEEP_WAKEUP_GPIO ||
+                       wakeup_reason == ESP_SLEEP_WAKEUP_EXT0 ||
+                       wakeup_reason == ESP_SLEEP_WAKEUP_EXT1);
+
+  if (savedFilename.length() == 0 || isGpioWakeup)
   {
-    Log.info("%s [%d]: Display TRMNL logo start\r\n", __FILE__, __LINE__);
+    Log.info("%s [%d]: Display TRMNL logo start (filename empty=%d, GPIO wake=%d)\r\n",
+             __FILE__, __LINE__, savedFilename.length() == 0, isGpioWakeup);
 
 
     display_show_image(storedLogoOrDefault(1), DEFAULT_IMAGE_SIZE, false);
@@ -260,6 +266,11 @@ void bl_init(void)
     preferences.putBool(PREFERENCES_DEVICE_REGISTERED_KEY, false);
     Log.info("%s [%d]: Display TRMNL logo end\r\n", __FILE__, __LINE__);
     preferences.putString(PREFERENCES_FILENAME_KEY, "");
+  }
+  else
+  {
+    Log.info("%s [%d]: Skipping logo display - saved filename exists: %s\r\n",
+             __FILE__, __LINE__, savedFilename.c_str());
   }
 
   Log_info("Firmware version %s", FW_VERSION_STRING);
