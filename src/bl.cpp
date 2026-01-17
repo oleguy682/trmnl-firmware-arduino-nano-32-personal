@@ -244,11 +244,15 @@ void bl_init(void)
   // Mount SPIFFS
   filesystem_init();
 
-  if (wakeup_reason != ESP_SLEEP_WAKEUP_TIMER)
+  // Only show logo and clear filename on power-on, reset, or button press - NOT on timer wakeup
+  if (wakeup_reason == ESP_SLEEP_WAKEUP_UNDEFINED ||
+      wakeup_reason == ESP_SLEEP_WAKEUP_GPIO ||
+      wakeup_reason == ESP_SLEEP_WAKEUP_EXT0 ||
+      wakeup_reason == ESP_SLEEP_WAKEUP_EXT1)
   {
     Log.info("%s [%d]: Display TRMNL logo start\r\n", __FILE__, __LINE__);
 
-  
+
     display_show_image(storedLogoOrDefault(1), DEFAULT_IMAGE_SIZE, false);
 
 
