@@ -977,7 +977,11 @@ void display_show_image(uint8_t *image_buffer, int data_size, bool bWait)
         Log_info("Saving new temperature profile (%d) to FLASH", iTempProfile);
         preferences.putUInt(PREFERENCES_TEMP_PROFILE, iTempProfile);
     }
-    if ((iUpdateCount & 7) == 0 || apiDisplayResult.response.maximum_compatibility == true) {
+    if ((iUpdateCount & 7) == 0 || apiDisplayResult.response.maximum_compatibility == true
+#ifdef FORCE_FULL_REFRESH
+        || true  // Build flag set to always force full refresh
+#endif
+    ) {
         Log_info("%s [%d]: Forcing full refresh; desired refresh mode was: %d\r\n", __FILE__, __LINE__, iRefreshMode);
         iRefreshMode = REFRESH_FULL; // force full refresh every 8 partials
     }
